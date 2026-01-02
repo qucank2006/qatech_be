@@ -4,48 +4,36 @@ const jwt = require("jsonwebtoken");
 const PasswordReset = require("../models/PasswordReset");
 const nodemailer = require("nodemailer");
 
-// ----- ĐĂNG KÝ -----
+// Đăng ký tài khoản người dùng mới
 exports.register = async ({ name, email, password }) => {
-  // Check email tồn tại
   const exist = await User.findOne({ where: { email } });
   if (exist) {
     return { status: 400, msg: "Email đã tồn tại" };
   }
 
-  // Hash password
   const hashPass = await bcrypt.hash(password, 10);
-
-  // Tạo user mới
-  const user = await User.create({
-    name,
-    email,
-    password: hashPass,
-  });
+  const user = await User.create({ name, email, password: hashPass });
 
   return { status: 201, msg: "Đăng ký thành công", user };
 };
 
-
-// ----- ĐĂNG NHẬP -----
-exports.login = async ({ email, password }) => {
-  // Tìm user theo email
+// Xác thực đăng nhập và tạo token
+exports.login = async ({ email, password, remember }) => {
   const user = await User.findOne({ where: { email } });
-
   if (!user) {
     return { status: 400, msg: "Email hoặc mật khẩu không chính xác" };
   }
 
-  // So sánh mật khẩu
   const match = await bcrypt.compare(password, user.password);
   if (!match) {
     return { status: 400, msg: "Email hoặc mật khẩu không chính xác" };
   }
 
-  // Tạo token
+  const expiresIn = remember ? "7d" : "1d";
   const token = jwt.sign(
     { id: user.id, role: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: "1d" }
+    { expiresIn }
   );
 
   return {
@@ -57,26 +45,20 @@ exports.login = async ({ email, password }) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      phone: user.phone,
+      address: user.address,
+      avatar: user.avatar
     },
   };
 };
 
-// ----- QUÊN MẬT KHẨU -----
+// Tạo mã OTP và gửi qua email
 exports.createOTP = async (email) => {
-  // 1) Tạo OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-  // 2) Thời gian hết hạn (5 phút)
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-  // 3) Lưu vào DB
-  await PasswordReset.create({
-    email,
-    otp,
-    expiresAt
-  });
+  await PasswordReset.create({ email, otp, expiresAt });
 
-  // 4) Tạo transporter để gửi email
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -84,8 +66,6 @@ exports.createOTP = async (email) => {
       pass: process.env.EMAIL_PASS,
     }
   });
-
-  // 5) Gửi email
   const htmlContent = `
     <div style="font-family: Helvetica,Arial,sans-serif;min-width:1000px;overflow:auto;line-height:2">
       <div style="margin:50px auto;width:70%;padding:20px 0">
@@ -116,39 +96,53 @@ exports.createOTP = async (email) => {
     msg: "OTP đã được gửi qua email",
   };
 };
-// verify OTP
+
+// Xác minh mã OTP
 exports.verifyOTP = async (email, otp) => {
-  // Tìm OTP mới nhất của email
   const record = await PasswordReset.findOne({
     where: { email, otp },
     order: [["createdAt", "DESC"]]
   });
 
-  if (!record) {
-    return { status: 400, msg: "OTP không đúng" };
-  }
-
-  // Kiểm tra hạn
-  if (record.expiresAt < new Date()) {
-    return { status: 400, msg: "OTP đã hết hạn" };
-  }
+  if (!record) return { status: 400, msg: "OTP không đúng" };
+  if (record.expiresAt < new Date()) return { status: 400, msg: "OTP đã hết hạn" };
 
   return { status: 200, msg: "OTP hợp lệ" };
 };
-// reset password
-exports.resetPassword = async (email, newPassword) => {
-  // Hash mật khẩu mới
-  const bcrypt = require("bcryptjs");
-  const hashed = await bcrypt.hash(newPassword, 10);
 
-  // Update DB
-  await User.update(
-    { password: hashed },
-    { where: { email } }
-  );
+// Đặt lại mật khẩu mới
+exports.resetPassword = async (email, newPassword) => {
+  const hashed = await bcrypt.hash(newPassword, 10);
+  await User.update({ password: hashed }, { where: { email } });
+
+  return { status: 200, msg: "Đổi mật khẩu thành công" };
+};
+
+// Cập nhật thông tin profile người dùng
+exports.updateProfile = async (userId, { name, password, phone, address, avatar }) => {
+  const user = await User.findByPk(userId);
+  if (!user) return { status: 404, msg: "Người dùng không tồn tại" };
+
+  const updateData = {};
+  if (name) updateData.name = name;
+  if (phone) updateData.phone = phone;
+  if (address) updateData.address = address;
+  if (avatar) updateData.avatar = avatar;
+  if (password) updateData.password = await bcrypt.hash(password, 10);
+
+  await user.update(updateData);
 
   return {
     status: 200,
-    msg: "Đổi mật khẩu thành công"
+    msg: "Cập nhật thông tin thành công",
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      address: user.address,
+      avatar: user.avatar
+    }
   };
 };
