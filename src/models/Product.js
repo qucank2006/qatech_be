@@ -4,103 +4,80 @@ const sequelize = require("../config/db");
 const Product = sequelize.define("Product", {
   name: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    comment: 'Tên sản phẩm'
   },
   slug: {
     type: DataTypes.STRING,
     allowNull: true,
-    unique: true
+    unique: true,
+    comment: 'Đường dẫn thân thiện'
   },
   description: {
     type: DataTypes.TEXT,
-    allowNull: true
+    allowNull: true,
+    comment: 'Mô tả sản phẩm'
   },
   price: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
+    comment: 'Giá hiện tại'
   },
   oldPrice: {
     type: DataTypes.INTEGER,
-    allowNull: true
-  },
-  images: {
-    type: DataTypes.JSON,
     allowNull: true,
-    defaultValue: []
+    comment: 'Giá cũ (để hiển thị khuyến mãi)'
   },
   category: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: true,
+    comment: 'Danh mục: laptop, linh-kien, phu-kien'
   },
   brand: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: true,
+    comment: 'Thương hiệu'
   },
   usage: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: true,
+    comment: 'Mục đích sử dụng: gaming, van-phong, do-hoa'
   },
   stock: {
     type: DataTypes.INTEGER,
-    defaultValue: 0
+    defaultValue: 0,
+    comment: 'Số lượng tồn kho'
   },
   sold: {
     type: DataTypes.INTEGER,
-    defaultValue: 0
+    defaultValue: 0,
+    comment: 'Số lượng đã bán'
   },
-  // Thông số kỹ thuật chi tiết
-  cpuType: {
+  subCategory: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: true,
+    comment: 'Danh mục phụ: cpu, ram, gpu, storage, cooling, case, psu, mainboard'
   },
-  ramCapacity: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  ramType: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  ramSlots: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  storage: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  battery: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  gpuType: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  screenSize: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  screenTechnology: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  screenResolution: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  os: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  ports: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  otherSpecs: {
-    type: DataTypes.TEXT,
-    allowNull: true
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    comment: 'Trạng thái hoạt động'
   }
+}, {
+  tableName: 'products',
+  timestamps: true,
+  indexes: [
+    {
+      fields: ['slug'],
+      unique: true
+    },
+    {
+      fields: ['category', 'brand']
+    },
+    {
+      fields: ['price']
+    }
+  ]
 });
 
 module.exports = Product;

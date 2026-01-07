@@ -30,6 +30,10 @@ const User = sequelize.define("User", {
   address: {
     type: DataTypes.STRING,
     allowNull: true
+  },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   }
 });
 
