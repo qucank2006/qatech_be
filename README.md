@@ -132,5 +132,5 @@ Phát triển bởi đội ngũ QATech.
 
 Cảm ơn các contributor và nguồn tham khảo:
 - Node.js, Express, Sequelize, MySQL, JWT, bcryptjs, multer, nodemailer, axios
-
+- ChatGPT, Claude, Gemini, Github Copilot, Cursor
 
