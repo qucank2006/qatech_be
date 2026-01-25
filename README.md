@@ -128,7 +128,7 @@ Xem chi tiết trong mã nguồn. Các chức năng chính:
 
 ## Tác giả & Đóng góp
 
-Phát triển bởi đội ngũ QATech.
+Phát triển bởi Trần Lê Quốc Anh.
 
 Cảm ơn các contributor và nguồn tham khảo:
 - Node.js, Express, Sequelize, MySQL, JWT, bcryptjs, multer, nodemailer, axios
